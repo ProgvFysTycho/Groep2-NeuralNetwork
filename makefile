@@ -1,19 +1,29 @@
+# makefile for the class 'network' 
+# with a program 'TestNetwork_saveLayers' for testing the 'saveLayers' function
+ 
+# Shell
 SHELL = /bin/bash
-#Compiler
-COMPILER = g++ -g -std=c++11 -Wall
-#Macros
-CFLAGS = $(shell root-config --cflags)
-LIBS = $(shell root-config --libs)
-
-CPPFLAGS = $(shell pkg-config --cflags opencv)
-LDLIBS = $(shell pkg-config --libs opencv)
+# Compiler
+COMPILER = g++ -g -std=c++11 -Wall -Wno-deprecated -O3 -DNDEBUG
 
 
-all:propagate
+.SUFFIXES:
+.SUFFIXES: .cpp .o
+.PHONY: all clean
 
-propagate: test.cpp
-	$(COMPILER) test.cpp -o test
+
+all: TestNetwork_saveLayers network.o
 
 
-clean : 
-	rm test
+# Target definitions
+
+TestNetwork_saveLayers: TestNetwork_saveLayers.cpp network.o
+	$(COMPILER) TestNetwork_saveLayers.cpp network.o -o $@
+
+network.o: network.cpp network.h
+	$(COMPILER) -c network.cpp -o $@
+
+
+# clean up
+clean:
+	rm TestNetwork_saveLayers *.o
