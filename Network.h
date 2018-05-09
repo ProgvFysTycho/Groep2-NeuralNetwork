@@ -13,18 +13,17 @@
 
 using namespace std;
 
-class network{
+class network {
 	public:
 		network(vector<vector<vector<float>>> NetworkWeights, vector<vector<float>> NetworkBias); //Constructor1, when weights and biases are loaded from a file.
 		network(vector<int> nNeurons, int nInputs); //Constructor2, when no weights or biases are given. Paramters are # neurons for every layer, #inputs for the first layer of neurons, # layers.
 		~network(); //Destructor
 		network(const network &net); //Copy constructor
-		
-		//Assigment operator
+		network operator = (const network&); //Assigment operator
 
 		void setWeights(vector<vector<vector<float>>>);
 		void setBias(vector<vector<float>>);
-		//void setNumberofLayers(int);
+		void setNumberofLayers(int);
 
 		vector<vector<vector<float>>> getWeights();
 		vector<vector<float>> getBias();
@@ -40,5 +39,6 @@ class network{
 	protected:
 		vector<layer> Layers;
 		int NumberofLayers;
+		vector<vector<float>> LayerResult;
 
 		//bool NetworkHasChanged  
