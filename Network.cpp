@@ -36,12 +36,20 @@ network::~network(){
 }
 //=================================================================================================
 
-network::network(const network &net){ //Copy constructor
+network::network(const network &net){ // copy constructor
 	Layers = net.Layers;
 	NumberofLayers = net.NumberofLayers;
+	LayerResult = net.LayerResult;
 }
 
-//Assignment operator?
+network& network::operator = (const network& net){  // assignment operator
+	if (&Net != this){
+		Layers = net.Layers;
+		NumberofLayers = net.NumberofLayers;
+		LayerResult = net.LayerResult;
+	}
+ 	return *this;		
+}
 
 //=================================================================================================
 
