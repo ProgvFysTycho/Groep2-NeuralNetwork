@@ -22,13 +22,14 @@ network::network(vector<vector<vector<float>>> NetworkWeights, vector<vector<flo
 
 
 //Constructor for the network class when random weights and biases are chosen
-network::network(vector<int> nNeurons, int nInputs){
+network::network(const vector<int>& nNeurons, const int nInputs){
 	NumberofLayers = nNeurons.size();
-	//bool input = false;	
-	for(int i=0; i < NumberofLayers; ++i){ //Iterates over the layers of the network
-		Layers.push_back(layer(nNeurons.at(i), nInputs));	//creates a vector of neurons using layer/constructor2 wich in turn uses neuron/constructor2
-	}
+	//bool input = false;
 
+	Layers.push_back(layer(nNeurons.at(0),nInputs)); // First layer of neurons (each neuron gets 'nInputs' input values) 
+		for(int i=1; i < NumberofLayers; ++i){ //Iterates over the layers of the network
+		Layers.push_back(layer(nNeurons.at(i), nNeurons.at(i-1)));	//creates a vector of neurons using layer/constructor2 wich in turn uses neuron/constructor2
+	}
 }
 
 //Destructor
@@ -36,12 +37,22 @@ network::~network(){
 }
 //=================================================================================================
 
-network::network(const network &net){ //Copy constructor
+network::network(const network& net){ //Copy constructor
 	Layers = net.Layers;
 	NumberofLayers = net.NumberofLayers;
+	//NetworkHasChanged  = net.NetworkHasChanged;
 }
 
-//Assignment operator?
+network& network::operator = (const network& net) //Assigment operator (constructor)
+{
+	if (&net != this)
+	{
+		Layers = net.Layers;
+		NumberofLayers = net.NumberofLayers;
+		//NetworkHasChanged  = net.NetworkHasChanged;
+	}
+	return *this;
+}
 
 //=================================================================================================
 
@@ -161,25 +172,28 @@ void network::loadLayers(const string fileName)
 //Author: Tycho=========================================================================
 void network::saveLayers(const string fileName)
 {
-     // exception if the string 'filename' is invalid.
-     const char* commaDelim = ",";
-     const char newLineDelim = '\n'; // end of line, '\n' is treated as one character while "\n" is treated as  two characters
-     //cout << "Values of bias and weights of network will be printed to a file." << endl; // For testing
-     //cout << "Filename is " << filename << "." << endl; // For testing
-    
-     ofstream saveFile(fileName);
-     // exception if file could not be opened.
+    // exception if the string 'filename' is invalid.
+    const char* commaDelim = ",";	// used as delimiter between values in file
+    const char* newLineDelim = "\n";	// end of line characters, used as delimiter between rows of values in file
      
-     // printing BIAS values to file
-    // saveFile << layer[0];
+    //cout << "Values of bias and weights of network will be printed to a file." << endl; // For testing
+    //cout << "Filename is " << filename << "." << endl; // For testing
     
-    saveFile << getNumberofLayers();
+    const size_t nInputs = getWeights().front().front().size(); // # weights of first neuron of first layer = # inputs of network
+    
+    ofstream saveFile(fileName);
+    // exception if file could not be opened.
+     
+     
+    saveFile << nInputs;	// prints # inputs of network to 'fileName' 
+    saveFile << commaDelim << getNumberofLayers();	// second value of first row of 'fileName'
     for (int i=0; i < NumberofLayers; ++i)
     {
     	saveFile << commaDelim << (Layers.at(i)).getNumberOfNeurons();
     }
     saveFile << newLineDelim << newLineDelim;
     
+    // printing BIAS values to file
     vector<vector<float>> testBias = getBias();
     vector<vector<float> >::const_iterator endBiasNetwork = testBias.end(); 
     for (vector<vector<float> >::const_iterator iterLayer = testBias.begin() ; iterLayer != endBiasNetwork ; ++iterLayer)
@@ -212,7 +226,7 @@ void network::saveLayers(const string fileName)
 
 //Author: Marjan & Yannick=========================================================================
 
-
+/*
 vector<vector<float>> network::errorFunc(vector<float> y){   // berekent error functie voor een gegeven y en de berekende a
 
 	vector<vector<vector<float>>> W = getWeights();
@@ -284,13 +298,7 @@ float costFunc(vector<float> a ,vector<float> y ){  // berekent cost functie voo
 
 	return C/2;
 }
-
-
-
-
-
-
-
+*/
 
 
 

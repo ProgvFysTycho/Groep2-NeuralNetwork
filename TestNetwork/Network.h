@@ -20,12 +20,12 @@ using namespace std;
 
 class network {
 	public:
-		network(vector<vector<vector<float>>> NetworkWeights, vector<vector<float>> NetworkBias); //Constructor1, when weights and biases are loaded from a file.
-		network(vector<int> nNeurons, int nInputs); //Constructor2, when no weights or biases are given. Paramters are # neurons for every layer, #inputs for the first layer of neurons, # layers.
+		network(vector<vector<vector<float>>> NetworkWeights, vector<vector<float>> NetworkBias); //Constructor1, when weights and biases vectors are given.
+		network(const vector<int>& nNeurons, const int nInputs);	// Constructor2, when no weights or biases are given. Paramters are # neurons for every layer,
+										// #inputs for the first layer of neurons, # layers.
 		~network(); //Destructor
-		network(const network &net); //Copy constructor
-		
-		//Assigment operator
+		network(const network& net); //Copy constructor
+		network& operator = (const network& net); //Assigment operator (constructor)
 
 		void setWeights(vector<vector<vector<float>>>);
 		void setBias(vector<vector<float>>);
@@ -39,14 +39,15 @@ class network {
 		void saveLayers(const string);		// This function saves the current values of all the biases and weights in the network
 			
 
-		vector<vector<float>> errorFunc(vector<float>);
-		vector<float> resultFunc(vector<float>);
-		float costFunc(vector<float>,vector<float>);
+		//vector<vector<float>> errorFunc(vector<float>);
+		//vector<float> resultFunc(vector<float>);
+		//float costFunc(vector<float>,vector<float>);
 
 	protected:
+	
+		// Data members
 		vector<layer> Layers;
 		int NumberofLayers;
-
 		//bool NetworkHasChanged  
 };
 #endif // NETWORK_H
