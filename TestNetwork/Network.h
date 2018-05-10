@@ -1,8 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-//#include"Neuron.h"
-#include "Layer.h" // We only need the header "Layer.h"
+#include "Layer.h" 
 
 #include <iostream>
 #include <fstream>
@@ -20,20 +19,21 @@ using namespace std;
 
 class network {
 	public:
-		network(vector<vector<vector<float>>> NetworkWeights, vector<vector<float>> NetworkBias); //Constructor1, when weights and biases vectors are given.
-		network(const vector<int>& nNeurons, const int nInputs);	// Constructor2, when no weights or biases are given. Paramters are # neurons for every layer,
-										// #inputs for the first layer of neurons, # layers.
-		~network(); //Destructor
-		network(const network& net); //Copy constructor
-		network& operator = (const network& net); //Assigment operator (constructor)
+		network(const vector<vector<vector<float>>>& NetworkWeights, const vector<vector<float>>& NetworkBias); //Constructor1, when weights and biases vectors are given.
+		network(const string fileName);					// Constructor2, when weights and bias values are loaded from a file
+		network(const vector<int>& nNeurons, const int nInputs);	// Constructor3, when no weights or biases are given. Paramters are # neurons for every layer,
+											// #inputs for the first layer of neurons, # layers.
+		~network(); 							// Destructor
+		network(const network& net); 					// Copy constructor
+		network& operator = (const network& net); 			// Assignment constructor
 
-		void setWeights(vector<vector<vector<float>>>);
-		void setBias(vector<vector<float>>);
-		void setNumberofLayers(int);
+		void setWeights(const vector<vector<vector<float>>>&);
+		void setBias(const vector<vector<float>>&);
+		void setNumberofLayers(const int);
 
 		vector<vector<vector<float>>> getWeights();
 		vector<vector<float>> getBias();
-		int getNumberofLayers();
+		int getNumberofLayers() const;
 
 		void loadLayers(const string);
 		void saveLayers(const string);		// This function saves the current values of all the biases and weights in the network

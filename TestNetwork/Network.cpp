@@ -1,43 +1,48 @@
-//#include"Neuron.h"
-//#include"Layer.h"
 #include "Network.h"
-
-//#include <algorithm>// for copying vector content to savefile
-
-//using namespace std;
 
 
 //Author: Robbe (& Marjan)=========================================================================
 //Constructor for the network class when Weights and biases are loaded from a file
-network::network(vector<vector<vector<float>>> NetworkWeights, vector<vector<float>> NetworkBias){
-	
+network::network(const vector<vector<vector<float>>>& NetworkWeights, const vector<vector<float>>& NetworkBias)
+{	
 	//Possible argument check	
 
-	NumberofLayers = NetworkWeights.size(); //The size of the outer vector of NetworkWeights is the same as the number of layers
+	NumberofLayers = NetworkWeights.size(); // The size of the outer vector of NetworkWeights is the same as the number of layers
 	//bool input = false;
-	for (int i=0; i < NumberofLayers; ++i){ //Iterates over the layers of the network
+	for (int i=0; i < NumberofLayers; ++i)  // Iterates over the layers of the network
+	{
 		Layers.push_back(layer(NetworkWeights.at(i), NetworkBias.at(i)));	//creates a vector of neurons using layer/constructor1 wich in turn uses neuron/constructor1
 	}
 }
 
+network::network(const string fileName)
+{
+	
+	loadLayers(fileName);
+}
 
-//Constructor for the network class when random weights and biases are chosen
-network::network(const vector<int>& nNeurons, const int nInputs){
+
+network::network(const vector<int>& nNeurons, const int nInputs)	//Constructor for the network class when random weights and biases are chosen
+{
 	NumberofLayers = nNeurons.size();
 	//bool input = false;
 
-	Layers.push_back(layer(nNeurons.at(0),nInputs)); // First layer of neurons (each neuron gets 'nInputs' input values) 
-		for(int i=1; i < NumberofLayers; ++i){ //Iterates over the layers of the network
+	Layers.push_back(layer(nNeurons.at(0),nInputs));	// First layer of neurons (each neuron gets 'nInputs' input values) 
+	for(int i=1; i < NumberofLayers; ++i)			//Iterates over the layers of the network
+	{ 
 		Layers.push_back(layer(nNeurons.at(i), nNeurons.at(i-1)));	//creates a vector of neurons using layer/constructor2 wich in turn uses neuron/constructor2
 	}
 }
 
-//Destructor
-network::~network(){
+
+network::~network()	//Destructor
+{
+
 }
 //=================================================================================================
 
-network::network(const network& net){ //Copy constructor
+network::network(const network& net)	//Copy constructor
+{ 
 	Layers = net.Layers;
 	NumberofLayers = net.NumberofLayers;
 	//NetworkHasChanged  = net.NetworkHasChanged;
@@ -56,45 +61,53 @@ network& network::operator = (const network& net) //Assigment operator (construc
 
 //=================================================================================================
 
-void network::setWeights(vector<vector<vector<float>>> NetworkWeights){
+void network::setWeights(const vector<vector<vector<float>>>& NetworkWeights)	// sets weights for every layer
+{
 
-	//for(vector<vector<layer>>::iterator it=Layers.begin();it != Neurons.end(); it++){
-		
-	//}
-	for(int i = 0; i < getNumberofLayers(); ++i){ //Iterates over the layers off the network
-		(Layers.at(i)).setWeights(NetworkWeights.at(i)); //For every layer, sets the weights using the setWeighs function from the layer class
-	}
+	int count = 0;
+	for_each(Layers.begin(), Layers.end(),		// For each layer i in the 'Layers' vector
+		[&](layer& Layer) {			// change their weights to one of layer i of 'NetworkWeights'.
+			Layer.setWeights(NetworkWeights.at(count++));	// Here is the post-increment of 'count' usefull.
+	});
 }
 
-void network::setBias(vector<vector<float>> NetworkBias){
+void network::setBias(const vector<vector<float>>& NetworkBias)	// sets biases for every layer
+{
 
-	for(int i = 0; i < getNumberofLayers(); ++i){ //Iterates over the layers off the network
-		(Layers.at(i)).setBias(NetworkBias.at(i)); //For every layer, sets the weights using the setWeighs function from the layer class
-	}
+	int count = 0;
+	for_each(Layers.begin(), Layers.end(),		// For each layer i in the 'Layers' vector
+		[&](layer& Layer) {			// change their biases to one of layer i of 'NetworkBias'.
+			Layer.setBias(NetworkBias.at(count++));	// Here is the post-increment of 'count' usefull.
+	});
 }
 
-void network::setNumberofLayers(int NLayers){
+void network::setNumberofLayers(const int NLayers)	// sets amount of layers in the network
+{
 	NumberofLayers = NLayers;
 }
 
-vector<vector<vector<float>>> network::getWeights(){
+vector<vector<vector<float>>> network::getWeights()
+{
 	vector<vector<vector<float>>> weights;
+	
 	for(int i=0; i < NumberofLayers; ++i){
 		weights.push_back((Layers.at(i)).getWeights());
 	}
-return weights;
+	return weights;
 }
 
-vector<vector<float>> network::getBias(){
+vector<vector<float>> network::getBias()
+{
 	vector<vector<float>> bias;
 	for(int i=0; i < NumberofLayers; ++i){
 		bias.push_back((Layers.at(i)).getBias());
 	}
-return bias;
+	return bias;
 }
 
-int network::getNumberofLayers(){
-	return Layers.size();
+int network::getNumberofLayers() const
+{
+	return NumberofLayers;
 }
 
 void network::loadLayers(const string fileName)
@@ -148,15 +161,15 @@ void network::loadLayers(const string fileName)
         }
                 
         vector<float> Dimens = dataFloat.at(0).at(0);
-        int NLayers = Dimens.size()-1;
+        setNumberofLayers(Dimens.size()-1);
 
-        vector<vector<float>> NetworkBias = dataFloat.at(1);
+        setBias(dataFloat.at(1));
 
         vector<vector<vector<float>>> NetworkWeights;
-        for(int i=2; i< NLayers+2; i++){
+        for(int i=2; i< getNumberofLayers()+2; ++i){
                 NetworkWeights.push_back(dataFloat.at(i));
         }
-
+	setWeights(NetworkWeights);
         /*for(vector<vector<string>> vecvec : TotdataString){
                 for(vector<string> vec : vecvec){
                         for(string data : vec){

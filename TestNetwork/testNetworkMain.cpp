@@ -91,13 +91,20 @@ int main()
     
     network testNetwork(nNeurons,Ninputs);
     //network testNetwork(testWeights,testBias);
+    testNetwork.setWeights(testWeights);
     testNetwork.saveLayers(fileName1); // To check if the constructors behave correctly.
     
-    string fileName2("testFile2.csv");
-    network anotherNetwork(testNetwork);
-    //network anotherNetwork = testNetwork;
-    anotherNetwork.saveLayers(fileName2);
     
+    string fileName2("testFile2.csv");
+    //network testNetwork2(testWeights,testBias);
+    //testNetwork2.saveLayers(fileName2);
+    
+    
+    //network anotherNetwork(fileName1);	// Constructor when weight and bias values are loaded from file, doesn't work yet.
+    network anotherNetwork(testNetwork);	// Copy constructor
+    //network anotherNetwork = testNetwork;	// Assignment constructor
+    anotherNetwork.saveLayers(fileName2);
+    //anotherNetwork.getBias();
     
     
     
