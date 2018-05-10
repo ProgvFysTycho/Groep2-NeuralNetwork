@@ -13,7 +13,8 @@
 #include <string>
 #include <iterator>
 #include <algorithm> //for copying vector content to savefile
-// There should be a "boost" header file for the function 'loadLayers'
+#include <boost/algorithm/string.hpp>
+
 
 using namespace std;
 
