@@ -25,9 +25,12 @@ public:
 	vector<float> LayerOutput;
 	vector<float*> OutputPTR;
 
+	vector<neuron> Neurons;
+
+
 protected:
 	void setNumberOfNeurons(const int&);					//set-function for the number of neurons in a layer
-	vector<neuron> Neurons;
+	
 	size_t NumberOfNeurons;
 	size_t NumberOfInputs;
 

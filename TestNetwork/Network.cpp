@@ -15,11 +15,15 @@ network::network(const vector<vector<vector<float>>>& NetworkWeights, const vect
 	}
 }
 
-network::network(const string fileName)
+/*network::network(const string fileName)
 {
 	
 	loadLayers(fileName);
-}
+	for (int i=0; i < NumberofLayers; ++i)  // Iterates over the layers of the network
+	{
+		Layers.push_back(layer(NetworkWeights.at(i), NetworkBias.at(i))); //creates a vector of neurons using layer/constructor1 wich in turn uses neuron/constructor1
+	}
+}*/
 
 
 network::network(const vector<int>& nNeurons, const int nInputs)	//Constructor for the network class when random weights and biases are chosen
@@ -110,23 +114,24 @@ int network::getNumberofLayers() const
 	return NumberofLayers;
 }
 
-void network::loadLayers(const string fileName)
+void network::loadLayers(const string fileName) //Function to load already exsisting weights and bias
 {
-//De waarden uit de .CSV file inladen als string
+//Load values from a CSV-file as a vector of vectors of strings
         ifstream file(fileName);
         vector<vector<string>> dataString;
         vector<vector<vector<string>>> TotdataString;
         string line;
 	string delimeter = ",";
-	        // Iterate through each line and split the content using delimeter
+	        // Iterate through each line and split the content using delimeter ","
 	        while (getline(file, line))
 	        {
-	                vector<string> vec;
+	                vector<string> vec; //Temorary vector
 	                boost::algorithm::split(vec, line, boost::is_any_of(delimeter));
-                        if(line.empty()){
+                        if(line.empty())
+                        {
                                 TotdataString.push_back(dataString);
                                 dataString.clear();
-                        }
+                        } //If a empty line is found the program pushes the temporary vector<vector<string>> in the main object vectro<vector<vector<string>>> and clears the temporary storage object
                         else{
                                 dataString.push_back(vec);
                         }
@@ -134,25 +139,16 @@ void network::loadLayers(const string fileName)
 	        // Close the File
 	        file.close();
 
-        /*for(vector<vector<string>> vecvec: TotdataString){
-                for(vector<string> vec: vecvec){
-                        for(string data: vec){
-                                cout << data << ",";
-                        }
-                cout << "\n";
-                }
-        cout << "\n";
-        }*/
-	
-
-//Omzetten van strings naar floats (vector<vector<string>> dataString => vector<vector<float>> dataFloat)
-	vector<vector<vector<float>>> dataFloat;
+//Transformation of strings to floats (vector<vector<string>> dataString => vector<vector<float>> dataFloat)
+	vector<vector<vector<float>>> dataFloat; //Has the same structure as TotdataString
 	for(vector<vector<string>> vecvec : TotdataString)
-        {
+        { //iterates through each object in TotdataString and converts it to a float
                 vector<vector<float>> FillFill;
-                for(vector<string> vec : vecvec){
+                for(vector<string> vec : vecvec)
+                {
         		vector<float> Fill;
-                        for(string data : vec){
+                        for(string data : vec)
+                        {
         			Fill.push_back(stof(data));
                         }
         		FillFill.push_back(Fill);
@@ -161,157 +157,208 @@ void network::loadLayers(const string fileName)
         }
                 
         vector<float> Dimens = dataFloat.at(0).at(0);
-        setNumberofLayers(Dimens.size()-1);
+	//int NInputs = Dimens.at(0);
+	size_t NLayers1 = Dimens.at(1);
+        size_t NLayers2 = Dimens.size()-2;
 
-        setBias(dataFloat.at(1));
+	//if(NLayers1 == NLayers2){
+		setNumberofLayers(NLayers1); //Set the number of layers in the network
+	/*}
+	//else{
+	//	cout << "Error: Dimensions of loadfile are incorrect" << "\n" << "The first row of the loadfile is not consistent" << endl;
+	}*/
+
+        vector<vector<float>> NetworkBias = dataFloat.at(1);
+	if(NetworkBias.size() == NLayers1)
+	{
+		setBias(NetworkBias); //Set the biases in the network
+	}
+	else{
+		cout << "Error: Dimensions of loadfile are incorrect" << "\n" << "Not enough/too many biases for the amount of layers" << endl;
+	}
 
         vector<vector<vector<float>>> NetworkWeights;
-        for(int i=2; i< getNumberofLayers()+2; ++i){
-                NetworkWeights.push_back(dataFloat.at(i));
+        for(int i=2; i< getNumberofLayers()+2; ++i)
+        {
+		if((dataFloat.at(i)).size() == Dimens.at(i))
+		{
+                	NetworkWeights.push_back(dataFloat.at(i));
+		}
+		else{
+			cout << "Error: Dimensions of loadfile are incorrect" << "\n" << "Not enough/too many biases for the amount of neurons in layer " << i-1 << endl;
+		}
         }
-	setWeights(NetworkWeights);
-        /*for(vector<vector<string>> vecvec : TotdataString){
-                for(vector<string> vec : vecvec){
-                        for(string data : vec){
-                                cout << data << ",";
-                        }
-                        cout << "\n";
-                }
-                cout << "\n";
-        }*/
+
+	if(NetworkWeights.size() == NLayers1)
+	{
+		setWeights(NetworkWeights);
+	}
+	else{
+		cout << "Error: Dimensions of loadfile are incorrect" << "\n" << "Too many/Not enough weights for the number of layers" << endl;
+	}
 }
 
 
 //Author: Tycho=========================================================================
 void network::saveLayers(const string fileName)
 {
-    // exception if the string 'filename' is invalid.
+    // check fileName
+    const string extension(".csv");	// this must be the last part of the fileName
+    const size_t lenghtExt = extension.size();
+    const size_t lenghtFileName = fileName.size();
+    if ((lenghtFileName <= lenghtExt) || ((fileName.substr(lenghtFileName-lenghtExt)) != extension)) // check if fileName is valid
+    {
+    	throw std::invalid_argument("\n network::saveLayers: invalid argument, argument must have extension 'csv'.\n");
+    }
+    
+    
     const char* commaDelim = ",";	// used as delimiter between values in file
     const char* newLineDelim = "\n";	// end of line characters, used as delimiter between rows of values in file
-     
-    //cout << "Values of bias and weights of network will be printed to a file." << endl; // For testing
-    //cout << "Filename is " << filename << "." << endl; // For testing
-    
     const size_t nInputs = getWeights().front().front().size(); // # weights of first neuron of first layer = # inputs of network
     
-    ofstream saveFile(fileName);
-    // exception if file could not be opened.
-     
-     
-    saveFile << nInputs;	// prints # inputs of network to 'fileName' 
-    saveFile << commaDelim << getNumberofLayers();	// second value of first row of 'fileName'
-    for (int i=0; i < NumberofLayers; ++i)
-    {
-    	saveFile << commaDelim << (Layers.at(i)).getNumberOfNeurons();
-    }
-    saveFile << newLineDelim << newLineDelim;
+    // Begin of writing to file
+    ofstream outFile(fileName);
+        
+    outFile << nInputs;	// prints # inputs of network to 'fileName' 
+    outFile << commaDelim << getNumberofLayers();	// second value of first row of 'fileName' is # layers in network
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
+    	{						
+    		outFile << commaDelim << Layer.getNumberOfNeurons();	// prints # neurons to 'saveFile'
+    	});	// & in [] so the variables 'saveFile' and 'commaDelim' are know in this print function.
+    
+    outFile << newLineDelim << newLineDelim;	// add an empty line to saveFile
     
     // printing BIAS values to file
-    vector<vector<float>> testBias = getBias();
-    vector<vector<float> >::const_iterator endBiasNetwork = testBias.end(); 
-    for (vector<vector<float> >::const_iterator iterLayer = testBias.begin() ; iterLayer != endBiasNetwork ; ++iterLayer)
-    {
-    	copy((*iterLayer).begin(),(*iterLayer).end()-1,ostream_iterator<float>(saveFile, commaDelim));
-    	saveFile << (*iterLayer).back();
-    	saveFile << newLineDelim;
-    }
-    saveFile << newLineDelim;
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
+    	{						
+    		const vector<float>& layerBias = Layer.getBias();		// temporarily vector to store the biases of layer i
+    		copy(layerBias.begin(),layerBias.end()-1,
+    			ostream_iterator<float>(outFile, commaDelim));	// print those biases to file 'saveFile'
+    		outFile << layerBias.back() << newLineDelim;		// print bias of last neuron in layer i and start a new line in the file
+    	});
     
+    outFile << newLineDelim;	// second 'end of line character' in row -> add empty line in file
+
     // printing WEIGHTS values to file 
-    vector<vector<vector<float>>> testWeights = getWeights();   
-    vector<vector<vector<float> > >::const_iterator endWeightsNetwork = testWeights.end();
-    for (vector<vector<vector<float> > >::const_iterator iterLayer = testWeights.begin() ; iterLayer != endWeightsNetwork ; ++iterLayer)
-    {
-    	vector<vector<float> >::const_iterator endWeightsLayer = (*iterLayer).end();
-    	for (vector<vector<float> >::const_iterator iterNeuron = (*iterLayer).begin() ; iterNeuron != endWeightsLayer ;  ++iterNeuron)
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
     	{
-    		copy((*iterNeuron).begin(),(*iterNeuron).end()-1,ostream_iterator<float>(saveFile, commaDelim));
-    		saveFile << (*iterNeuron).back();
-    		saveFile << newLineDelim;
-    	}
-    	saveFile << newLineDelim;
-    }   
-    
-    
-    saveFile.close();
+    		const vector<vector<float> >& layerWeights = Layer.getWeights();	// temporarily vector to store the weights of layer i
+    		for_each(layerWeights.begin(),layerWeights.end(),[&](const vector<float>& neuronWeights)	// For each neuron j in layer i
+    			{
+    			copy(neuronWeights.begin(),neuronWeights.end()-1,
+    				ostream_iterator<float>(outFile, commaDelim));	// print those weights to file 'saveFile'
+    			outFile << neuronWeights.back() << newLineDelim;	// print weight of last neuron in layer i and start a new line in the file
+    			});
+    		outFile << newLineDelim;	// // second 'end of line character' in row -> add empty line in file
+    	});
+   // End of writing to file
+    outFile.close();
 }
 
 
 //Author: Marjan & Yannick=========================================================================
 
-/*
-vector<vector<float>> network::errorFunc(vector<float> y){   // berekent error functie voor een gegeven y en de berekende a
+vector<vector<float>> network::errorFunc(const vector<float>& y)	// calculates error function for given y and the previous calculated a
+{   
 
 	vector<vector<vector<float>>> W = getWeights();
 	vector<vector<float>> B = getBias();
-	vector<vector<float>> A = LayerResult;
-//////// errorfunctie van laatste laag L. Uitkomsten D gechecked met matlab
+	vector<vector<float*>> A = LayerResult;   // Contains results of every layer, excluding input of first layer
+
+
+//////// errorfunction of last layer
 	cout << "Calculation error function last layer" << endl;
-	vector<vector<float>> wll = W.at(2); 	// weights wjk tussen laatste j en voorlaatste k laag 
-	vector<float> bll = B.at(2);		// bias laatste laag
- 	vector <float> all = A.at(2);		// Output laatste laag
-	vector <float> avl = A.at(1); 		// input laatste laag (output voorlaatste laag)
+	vector<vector<float>> wll = W.at(NumberofLayers); 	// weights wjk between last j layer and second-last k layer
+	vector<float> bll = B.at(NumberofLayers);		// bias last layer
+ 	vector<float*> all = A.at(NumberofLayers);		// Output last layer
+	vector<float*> avl = A.at(NumberofLayers-1); 		// input last layer (output second last layer)
+	vector<float> Dll;					// errorfunc last layer
 
-	for (unsigned int i=0; i<all.size(); i++){  // loop over neuronen laatste laag
-		float WA=0;
-		for (unsigned int j=0; j<avl.size(); j++){  // vector vermenigvuldiging van Wjk*A(vl)
-			WA = WA + wll.at(i).at(j)*avl.at(j);
-
-		}
-		z = WA + bll.at(i);
-
-		Dll.at(i)=(all.at(i)-y.at(i))*dsigmoid(z); 
-		cout << Dll.at(i) << endl;
+	layer L = Layers.at(NumberofLayers);  // call last layer out of vector of layers
+	for (unsigned int i=0; i<all.size(); ++i) // loop over neurons last layer
+	{  
+		neuron N = L.Neurons.at(i); // call i-th neuron out of vector of neurons of layer l
+		N.setBias(bll.at(i)); // set bias of i-th neuron in layer l
+		N.setWeights(wll.at(i)); // set weights of i-th neuron in layer l			
+		N.activateFunc(avl);  // call activateFunc to calculate z 
+		float x = (*all.at(i)-y.at(i))*N.dsigmoid(); // calculate errorfunction
+		Dll.push_back(x); 
 	}
 
- 	//////// errorfunctie voorliggende lagen via recursief voorschrift
-	// Eerste laag maakt gebruik van a0 (de inputs) --> apart beschouwen?? z = wjk*a(l-1) + b
-	vector<float> zero(3,0);
-	int NumberofLayers = 3;
-        vector<vector<float>> DD={zero,zero,Dll}; // error functie: vector/laag
-	for (signed int l=NumberofLayers-2; l>0; --l){ // loop over #lagen van voorlaatste beginnende, l=laag, signed want anders werkt het niet (gaat niet onder 0) 
+//////// errorfunction of front layers by recursive prescription
+	vector<float> Dl; // temporary storage for error function of one layer
+	vector<vector<float>> DD = {Dll}; // error function: vector/layer
+	vector<float*> A0; ////// Hoe wordt deze meegegeven???
+	for (signed int l = NumberofLayers-2; l>=0; --l) // loop over #layers starting at second last, l=layer
+	{ 
 		cout << "Calculation error function for layer " << l+1 << endl;
-		for (unsigned int i=0; i<A.at(l).size(); i++){  //loop over neuronen per laag, i=neuron
-			float WA = 0;
-			float WD = 0;
-			for (unsigned int j=0; j<A.at(l-1).size(); j++){  // vectorvermenigvuldiging van W*A(l-1)
-				WA = WA + W.at(l).at(i).at(j) * A.at(l-1).at(j);
-			}
-			z = WA + B.at(l).at(i); 
+		Dl.clear();  //  clear temporary storage
+		layer L = Layers.at(l);  // call l-th layer out of vector of layers
+		if (l != 0)
+		{
+			for (unsigned int i=0; i<A.at(l).size(); ++i) //loop over #neurons per layer, i=neuron
+			{  
+				neuron N = L.Neurons.at(i); // call i-th neuron out of vector of neurons of layer l
+				N.setBias(B.at(l).at(i)); // set bias of i-th neuron in layer l
+				N.setWeights(W.at(l).at(i)); // set weights of i-th neuron in layer l	
+				N.activateFunc(A.at(l-1)); // calculate z with input of layer l
 
-			for (unsigned int j=0; j<DD.at(l+1).size(); j++){  // vectorvermeningvuldiging van Wkj*D(l+1)
-				WD = WD + W.at(l+1).at(j).at(i) * DD.at(l+1).at(j);  
+				float WD = 0;		
+				for (unsigned int j=0; j<DD.at(l+1).size(); ++j) // vector multiplication of Wkj*D(l+1)
+				{
+					WD = WD + W.at(l+1).at(j).at(i) * DD.at(0).at(j);  // use always first vector of DD
+				}
+
+				Dl.push_back(WD * N.dsigmoid()); // add errorfunc for i-th neuron to Dl
 			}
-			DD.at(l).at(i) = WD * dsigmoid(z);
-			cout << DD.at(l).at(i) << endl;
 		}
+		else{ // calculation for first layer, use A0
+			for (unsigned int i=0; i<A.at(l).size(); ++i) //loop over #neurons per layer, i=neuron
+			{  
+				neuron N = L.Neurons.at(i); // call i-th neuron out of vector of neurons of layer l
+				N.setBias(B.at(l).at(i)); // set bias of i-th neuron in layer l
+				N.setWeights(W.at(l).at(i)); // set weights of i-th neuron in layer l	
+				N.activateFunc(A0); // calculate z with input of layer l
+
+				float WD = 0;		
+				for (unsigned int j=0; j<DD.at(l+1).size(); ++j) // vector multiplication of Wkj*D(l+1)
+				{  
+					WD = WD + W.at(l+1).at(j).at(i) * DD.at(0).at(j);  // use always first vector of DD
+				}
+				Dl.push_back(WD * N.dsigmoid()); // add errorfunc for i-th neuron to Dl
+			}
+			
+		}
+		DD.insert(DD.begin(), Dl);  // add errorfunc for l-th layer in front of DD
 	}
 	return DD;
 }
 
 
-vector<float> network::resultFunc(vector<float> Input){  // berekent het resultaat van de laatste laag 
+vector<float*> network::resultFunc(const vector<float*>& Input)	// calculates the result of the last layer 
+{  
 
-	//vector<layer> Layers;  // protected member uit class network
-	//vector<float> resultFunc(Input); // roep resultfunc uit layer op
-	vector<float> result = Input; // begin voor recursief voorschrift
-	//vector<vector<float>> LayerResult;  // bevat alle result vectoren per laag --> protected member variabele
-	for (unsigned int i=0; i<NumberofLayers; ++i){ // loop over alle lagen
-		result = (Layers.at(i)).resultFunc(result);  // resultaat van laag i+1
-		LayerResult.push_back(result);
+	LayerResult.clear(); // Clear layerresult vector
+	vector<float*> result = Input; // Start for recursive function
+	for (signed int l=0; l<NumberofLayers; ++l)  // loop over all layers
+	{
+		result = (Layers.at(l)).resultFunc(result);  // result of layer l+1
+		LayerResult.push_back(result);  // add vector result to LayerResult
 	}
 	return result;
 }
 
-float costFunc(vector<float> a ,vector<float> y ){  // berekent cost functie voor gegeven y en a. 
+
+float network::costFunc(const vector<float>& a ,const vector<float>& y)  // Calculates cost function for given y and a. 
+{ 
 	float C = 0;
-	for (unsigned int i=0; i<10; ++i){
+	for (unsigned int i=0; i<a.size(); ++i){
 		C = C + pow(y.at(i)-a.at(i),2);
 	}
-
 	return C/2;
 }
-*/
+
+
 
 
 
