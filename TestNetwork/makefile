@@ -9,16 +9,19 @@ COMPILER = g++ -g -std=c++11 -Wall -Wno-deprecated -O3 -DNDEBUG
 .PHONY: all clean
 
 
-all: TestNetwork Network.o Layer.o Neuron.o
+all: TestNetwork testNetworkMain.o Network.o Layer.o Neuron.o
 
 
-TestNetwork: testNetworkMain.cpp Network.o Layer.o Neuron.o
-	$(COMPILER) testNetworkMain.cpp Network.o Layer.o Neuron.o -o $@
+TestNetwork: testNetworkMain.o Network.o Layer.o Neuron.o
+	$(COMPILER) $^ -o $@
+	
+testNetworkMain.o: testNetworkMain.cpp Network.h
+	$(COMPILER) -c testNetworkMain.cpp -o $@
 
-Network.o: Network.cpp Network.h
+Network.o: Network.cpp Network.h Layer.h
 	$(COMPILER) -c Network.cpp -o $@
 
-Layer.o: Layer.cpp Layer.h
+Layer.o: Layer.cpp Layer.h Neuron.h
 	$(COMPILER) -c Layer.cpp -o $@
 
 Neuron.o: Neuron.cpp Neuron.h

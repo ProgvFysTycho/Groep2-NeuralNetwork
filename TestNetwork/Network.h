@@ -4,23 +4,15 @@
 #include "Layer.h"
 //#include "Neuron.h" 
 
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <ctime>
-#include <cstdlib>
 #include <vector>
 #include <string>
-#include <iterator>
-#include <algorithm> //for copying vector content to savefile
-#include <boost/algorithm/string.hpp>
 
 
 using namespace std;
 
 class network {
 	public:
-		network(const vector<vector<vector<float>>>& NetworkWeights, const vector<vector<float>>& NetworkBias); //Constructor1, when weights and biases vectors are given.
+		network(const vector<vector<vector<float>>>& NetworkWeights,const vector<vector<float>>& NetworkBias); //Constructor1, when weights and biases vectors are given.
 		//network(const string fileName);					// Constructor2, when weights and bias values are loaded from a file
 		network(const vector<int>& nNeurons, const int nInputs); 		// Constructor3, when no weights or biases are given. Paramters are # neurons for every layer,
 											// #inputs for the first layer of neurons, # layers.
@@ -41,7 +33,7 @@ class network {
 			
 
 		vector<vector<float>> errorFunc(const vector<float>& y);	// Calculates the error function of all neurons in the network for given 'y' and the previous calculated 'a'.
-		vector<float*> resultFunc(const vector<float*>& Input);		// Calculates the result of the last layer -> the output of the network, from a given 'Input' for the network.
+		vector<float*> resultFunc(vector<float*> Input);		// Calculates the result (output) vector of each layer from a given 'Input' for the network. Returns output of last layer.
 		float costFunc(const vector<float>& a,const vector<float>& y); 	// Calculates the cost function for a given output (of the network) 'a' and 
 												// the expected output 'y'.
 

@@ -1,3 +1,12 @@
+#include <iostream>
+#include <fstream>
+#include <math.h>
+#include <ctime>
+#include <cstdlib>
+#include <iterator>
+#include <algorithm> //for copying vector content to savefile
+#include <boost/algorithm/string.hpp>
+
 #include "Network.h"
 
 
@@ -159,8 +168,8 @@ void network::loadLayers(const string fileName) //Function to load already exsis
         vector<float> Dimens = dataFloat.at(0).at(0);
 	//int NInputs = Dimens.at(0);
 	size_t NLayers1 = Dimens.at(1);
-        size_t NLayers2 = Dimens.size()-2;
-
+        //size_t NLayers2 = Dimens.size()-2;
+       
 	//if(NLayers1 == NLayers2){
 		setNumberofLayers(NLayers1); //Set the number of layers in the network
 	/*}
@@ -202,54 +211,64 @@ void network::loadLayers(const string fileName) //Function to load already exsis
 //Author: Tycho=========================================================================
 void network::saveLayers(const string fileName)
 {
-    // check fileName
-    const string extension(".csv");	// this must be the last part of the fileName
-    const size_t lenghtExt = extension.size();
-    const size_t lenghtFileName = fileName.size();
-    if ((lenghtFileName <= lenghtExt) || ((fileName.substr(lenghtFileName-lenghtExt)) != extension)) // check if fileName is valid
+    
+    const string extension(".csv");					// the extension ".csv" must be the last part of the fileName
+    const size_t lenghtExt = extension.size();				// size of the extension ".csv"
+    const size_t lenghtFileName = fileName.size();			// size of the string 'fileName'
+    
+    // check if string 'fileName' is invalid
+    // check 1): if the size of 'fileName' is shorter than the size of the extension -> invalid name 
+    // if 1) is not the case, then check 2): if last part of 'fileName' is not "csv." -> invalid name
+    if ((lenghtFileName <= lenghtExt) || ((fileName.substr(lenghtFileName-lenghtExt)) != extension)) // check 2) only works if check 1) is not true
     {
     	throw std::invalid_argument("\n network::saveLayers: invalid argument, argument must have extension 'csv'.\n");
     }
     
-    
-    const char* commaDelim = ",";	// used as delimiter between values in file
-    const char* newLineDelim = "\n";	// end of line characters, used as delimiter between rows of values in file
-    const size_t nInputs = getWeights().front().front().size(); // # weights of first neuron of first layer = # inputs of network
-    
-    // Begin of writing to file
-    ofstream outFile(fileName);
         
-    outFile << nInputs;	// prints # inputs of network to 'fileName' 
-    outFile << commaDelim << getNumberofLayers();	// second value of first row of 'fileName' is # layers in network
-    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
-    	{						
-    		outFile << commaDelim << Layer.getNumberOfNeurons();	// prints # neurons to 'saveFile'
-    	});	// & in [] so the variables 'saveFile' and 'commaDelim' are know in this print function.
+    const char* commaDelim = ",";						// used as delimiter between biases of the same layer and weights of the same neuron
+    const char* newLineDelim = "\n";						// end of line character
     
-    outFile << newLineDelim << newLineDelim;	// add an empty line to saveFile
+    const size_t nInputs = getWeights().front().front().size(); 		// # weights of first neuron of first layer = # inputs of network
+    
+    // Creating 'ofstream' object 
+    ofstream outFile(fileName);
+    
+    if (!outFile)								// If the file can't be opened, an error is given
+    {
+    	cerr << "Could not open file to save weights and biases of network. \n";
+    	exit(1);
+    }
+       
+    // Beginning of writing to file
+    outFile << nInputs;								// prints # inputs of network to 'fileName' 
+    outFile << commaDelim << getNumberofLayers();				// second value of first row of 'fileName' is # layers in network
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)			// For each layer i in the 'Layers' vector
+    	{						
+    		outFile << commaDelim << Layer.getNumberOfNeurons();		// prints # neurons to 'saveFile'
+    	});									// & in [] so the variables 'saveFile' and 'commaDelim' are know in this print function.
+    
+    outFile << newLineDelim << newLineDelim;					// add an empty line to saveFile
     
     // printing BIAS values to file
-    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
-    	{						
-    		const vector<float>& layerBias = Layer.getBias();		// temporarily vector to store the biases of layer i
-    		copy(layerBias.begin(),layerBias.end()-1,
-    			ostream_iterator<float>(outFile, commaDelim));	// print those biases to file 'saveFile'
-    		outFile << layerBias.back() << newLineDelim;		// print bias of last neuron in layer i and start a new line in the file
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)			// For each layer i in the 'Layers' vector
+    	{
+    		const vector<float>& layerBias = Layer.getBias();					// temporarily vector to store the biases of layer i
+    		copy(layerBias.begin(),layerBias.end()-1,ostream_iterator<float>(outFile, commaDelim));	// print those biases to file 'saveFile'
+    		outFile << layerBias.back() << newLineDelim;						// print bias of last neuron in layer i and start a new line in the file
     	});
     
-    outFile << newLineDelim;	// second 'end of line character' in row -> add empty line in file
+    outFile << newLineDelim;							// second 'end of line character' in row -> add empty line in file
 
     // printing WEIGHTS values to file 
-    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)	// For each layer i in the 'Layers' vector
+    for_each(Layers.begin(),Layers.end(),[&](layer& Layer)			// For each layer i in the 'Layers' vector
     	{
-    		const vector<vector<float> >& layerWeights = Layer.getWeights();	// temporarily vector to store the weights of layer i
-    		for_each(layerWeights.begin(),layerWeights.end(),[&](const vector<float>& neuronWeights)	// For each neuron j in layer i
+    		const vector<vector<float> >& layerWeights = Layer.getWeights();					// temporarily vector to store the weights of layer i
+    		for_each(layerWeights.begin(),layerWeights.end(),[&](const vector<float>& neuronWeights)		// For each neuron j in layer i
     			{
-    			copy(neuronWeights.begin(),neuronWeights.end()-1,
-    				ostream_iterator<float>(outFile, commaDelim));	// print those weights to file 'saveFile'
-    			outFile << neuronWeights.back() << newLineDelim;	// print weight of last neuron in layer i and start a new line in the file
+    			copy(neuronWeights.begin(),neuronWeights.end()-1,ostream_iterator<float>(outFile, commaDelim));	// print those weights to file 'saveFile'
+    			outFile << neuronWeights.back() << newLineDelim;						// print weight of last neuron in layer i and start a new line in the file
     			});
-    		outFile << newLineDelim;	// // second 'end of line character' in row -> add empty line in file
+    		outFile << newLineDelim;					// second 'end of line character' in row -> add empty line in file
     	});
    // End of writing to file
     outFile.close();
@@ -335,7 +354,7 @@ vector<vector<float>> network::errorFunc(const vector<float>& y)	// calculates e
 }
 
 
-vector<float*> network::resultFunc(const vector<float*>& Input)	// calculates the result of the last layer 
+vector<float*> network::resultFunc(vector<float*> Input)	// calculates the result of the last layer 
 {  
 
 	LayerResult.clear(); // Clear layerresult vector
@@ -345,7 +364,7 @@ vector<float*> network::resultFunc(const vector<float*>& Input)	// calculates th
 		result = (Layers.at(l)).resultFunc(result);  // result of layer l+1
 		LayerResult.push_back(result);  // add vector result to LayerResult
 	}
-	return result;
+	return result;	// the result (output) vector of the last layer -> output of network
 }
 
 
@@ -357,8 +376,5 @@ float network::costFunc(const vector<float>& a ,const vector<float>& y)  // Calc
 	}
 	return C/2;
 }
-
-
-
 
 
