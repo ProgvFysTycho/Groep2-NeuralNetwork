@@ -1,1 +1,1 @@
-Testing class propagate
+Testing class 'propagate'.
